@@ -11,14 +11,15 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 
 #include "resource_dir.h" // utility header for SearchAndSetResourceDir
 #include "game.h"
+#include "constant.h"
 
 int main()
 {
 	// Tell the window to use vsync and work on high DPI displays
-	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI | FLAG_FULLSCREEN_MODE | FLAG_WINDOW_UNDECORATED | FLAG_BORDERLESS_WINDOWED_MODE);
+	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
 
 	// Create the window and OpenGL context
-	InitWindow(1280, 800, "Hello Raylib");
+	InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Just another Minesweeper game");
 
 	// Utility function from resource_dir.h to find the resources folder and set it as the current working directory so we can load from it
 	SearchAndSetResourceDir("resources");
@@ -26,7 +27,9 @@ int main()
 	// Load a texture from the resources directory
 	Texture wabbit = LoadTexture("wabbit_alpha.png");
 
-	Game game = NewGame(5, 5, 5);
+	int boardSize = 25;
+	int mineCount = 5;
+	Game game = NewGame(boardSize, boardSize, mineCount);
 
 	PrintGame(game);
 
