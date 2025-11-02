@@ -8,15 +8,20 @@ typedef struct Cell
 {
     bool isMine;
     bool isHidden;
-    uint64_t adjacentMines;
+    int adjacentMines;
 } Cell;
 
 typedef struct Game
 {
-    uint64_t width;
-    uint64_t height;
+    int width;
+    int height;
+    int mines;
     Cell *cells;
 } Game;
 
-Game NewGame(uint64_t width, uint64_t height);
+Game NewGame(int width, int height, int mines);
 void FreeGame(Game game);
+
+void ResetMines(Game game);
+
+void PrintGame(Game game);
