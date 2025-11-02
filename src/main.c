@@ -10,11 +10,12 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 #include "raylib.h"
 
 #include "resource_dir.h" // utility header for SearchAndSetResourceDir
+#include "game.h"
 
 int main()
 {
 	// Tell the window to use vsync and work on high DPI displays
-	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI | FLAG_BORDERLESS_WINDOWED_MODE);
+	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI | FLAG_FULLSCREEN_MODE | FLAG_WINDOW_UNDECORATED | FLAG_BORDERLESS_WINDOWED_MODE);
 
 	// Create the window and OpenGL context
 	InitWindow(1280, 800, "Hello Raylib");
@@ -25,6 +26,8 @@ int main()
 	// Load a texture from the resources directory
 	Texture wabbit = LoadTexture("wabbit_alpha.png");
 
+	Game game = NewGame(32, 32);
+
 	// game loop
 	while (!WindowShouldClose()) // run the loop untill the user presses ESCAPE or presses the Close button on the window
 	{
@@ -33,6 +36,8 @@ int main()
 
 		// Setup the back buffer for drawing (clear color and depth buffers)
 		ClearBackground(BLACK);
+
+		DrawRectangle(0, 0, 200, 200, RED);
 
 		// draw some text using the default font
 		DrawText("Hello Raylib", 200, 200, 20, WHITE);
@@ -47,6 +52,7 @@ int main()
 	// cleanup
 	// unload our texture so it can be cleaned up
 	UnloadTexture(wabbit);
+	FreeGame(game);
 
 	// destroy the window and cleanup the OpenGL context
 	CloseWindow();
