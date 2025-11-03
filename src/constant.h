@@ -1,2 +1,7 @@
+#ifndef CONSTANT_HEADER_H
+#define CONSTANT_HEADER_H
+
 #define WINDOW_WIDTH 500
 #define WINDOW_HEIGHT 600
+
+#endif

@@ -12,6 +12,9 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 #include "resource_dir.h" // utility header for SearchAndSetResourceDir
 #include "game.h"
 #include "constant.h"
+#include "renderer.h"
+
+void ProcessEvents(Event *events);
 
 int main()
 {
@@ -42,13 +45,9 @@ int main()
 		// Setup the back buffer for drawing (clear color and depth buffers)
 		ClearBackground(BLACK);
 
-		DrawRectangle(0, 0, 200, 200, RED);
+		Event *events = RenderGame(game);
 
-		// draw some text using the default font
-		DrawText("Hello Raylib", 200, 200, 20, WHITE);
-
-		// draw our texture to the screen
-		DrawTexture(wabbit, 400, 200, WHITE);
+		ProcessEvents(events);
 
 		// end the frame and get ready for the next one  (display frame, poll input, etc...)
 		EndDrawing();
@@ -62,4 +61,16 @@ int main()
 	// destroy the window and cleanup the OpenGL context
 	CloseWindow();
 	return 0;
+}
+
+void ProcessEvents(Event *events)
+{
+	Event *start = events;
+	while (start != NULL)
+	{
+		Event *event = start;
+		printf("Got event %d\n", event->type);
+		start = event->next;
+		FreeEvent(event);
+	}
 }

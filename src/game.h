@@ -1,7 +1,9 @@
+#ifndef GAME_HEADER_H
+#define GAME_HEADER_H
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <malloc.h>
-
 #include "raylib.h"
 
 typedef struct Cell
@@ -25,3 +27,5 @@ void FreeGame(Game game);
 void ResetMines(Game game);
 
 void PrintGame(Game game);
+
+#endif
