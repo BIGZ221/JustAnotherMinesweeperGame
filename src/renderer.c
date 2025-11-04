@@ -81,7 +81,7 @@ Event *RenderBoard(Game game)
             {
                 DrawCircle(topLeftX + cellDimension / 2, topLeftY + cellDimension / 2, cellDimension / 2, BLACK);
             }
-            else
+            else if (cell->adjacentMines > 0)
             {
                 const char *cellText = TextFormat("%d", cell->adjacentMines);
                 int fontSize = cellDimension - 4;

@@ -3,7 +3,7 @@
 #include "raylib.h"
 #include "game.h"
 
-void ClearIslandFromIndex(Game *game, int row, int col);
+void ClearIslandFromIndex(Game *game, int row, int col, bool wasPreviousHiddenWithNoAdjacent);
 bool ShouldClearCell(Cell *cell);
 
 Game NewGame(int width, int height, int mines)
@@ -35,42 +35,46 @@ void ClearIsland(Game *game, Cell *startingCell)
     }
     int startRow = startIndex / game->height;
     int startCol = startIndex % game->width;
-    ClearIslandFromIndex(game, startRow, startCol);
+    Cell cell = game->cells[startIndex];
+    ClearIslandFromIndex(game, startRow, startCol, false);
 }
 
-void ClearIslandFromIndex(Game *game, int row, int col)
+void ClearIslandFromIndex(Game *game, int row, int col, bool didPreviousHaveAdjacent)
 {
     Cell *cell = &game->cells[row * game->height + col];
+    bool hasAdjacent = cell->adjacentMines != 0;
     cell->status = SHOWING;
+    if (didPreviousHaveAdjacent && cell->adjacentMines != 0)
+        return;
     // Above
     int aboveIndex = (row - 1) * game->height + col;
     if (row > 0 && ShouldClearCell(&game->cells[aboveIndex]))
     {
-        ClearIslandFromIndex(game, row - 1, col);
+        ClearIslandFromIndex(game, row - 1, col, hasAdjacent);
     }
     // Below
     int belowIndex = (row + 1) * game->height + col;
     if (row < game->height - 1 && ShouldClearCell(&game->cells[belowIndex]))
     {
-        ClearIslandFromIndex(game, row + 1, col);
+        ClearIslandFromIndex(game, row + 1, col, hasAdjacent);
     }
     // Left
     int leftIndex = row * game->height + col - 1;
     if (col > 0 && ShouldClearCell(&game->cells[leftIndex]))
     {
-        ClearIslandFromIndex(game, row, col - 1);
+        ClearIslandFromIndex(game, row, col - 1, hasAdjacent);
     }
     // Right
     int rightIndex = row * game->height + col + 1;
     if (col < game->width - 1 && ShouldClearCell(&game->cells[rightIndex]))
     {
-        ClearIslandFromIndex(game, row, col + 1);
+        ClearIslandFromIndex(game, row, col + 1, hasAdjacent);
     }
 }
 
 bool ShouldClearCell(Cell *cell)
 {
-    return cell->adjacentMines == 0 && cell->status == HIDDEN && !cell->isMine;
+    return cell->status == HIDDEN && !cell->isMine;
 }
 
 void ResetGame(Game *game)
