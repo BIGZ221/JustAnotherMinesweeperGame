@@ -75,6 +75,7 @@ void ProcessEvents(Game game, Event *events)
 		case CLICK_CELL:
 			event->data->cell->status = SHOWING;
 			if (event->data->cell->isMine) game.isLost = true;
+			ClearIsland(game, event->data->cell);
 			break;
 		case FLAG_CELL:
 			event ->data->cell->status = FLAGGED;

@@ -1,6 +1,8 @@
 #include "raylib.h"
 #include "game.h"
 
+void ClearIslandFromIndex(Game game, int row, int col);
+
 Game NewGame(int width, int height, int mines)
 {
     Cell *cells = (Cell *)malloc(width * height * sizeof(Cell));
@@ -18,6 +20,48 @@ Game NewGame(int width, int height, int mines)
 void FreeGame(Game game)
 {
     free(game.cells);
+}
+
+void ClearIsland(Game game, Cell *startingCell) {
+    int startIndex;
+    for (size_t i = 0; i < game.width * game.height; i++)
+    {
+        if (startingCell == &game.cells[i]) startIndex = i;
+    }
+    int startRow = startIndex / 10;
+    int startCol = startIndex % 10;
+    ClearIslandFromIndex(game, startRow, startCol);
+}
+
+void ClearIslandFromIndex(Game game, int row, int col)
+{
+    Cell *cell = &game.cells[row * game.height + col];
+    cell->status = SHOWING;
+    // Above
+    int aboveIndex = (row - 1) * game.height + col;
+    if (row > 0 && game.cells[aboveIndex].adjacentMines == 0 && game.cells[aboveIndex].status == HIDDEN)
+    {
+        ClearIslandFromIndex(game, row - 1, col);
+
+    }
+    // Below
+    int belowIndex = (row + 1) * game.height + col;
+    if (row < game.height - 1 && game.cells[belowIndex].adjacentMines == 0 && game.cells[belowIndex].status == HIDDEN)
+    {
+        ClearIslandFromIndex(game, row + 1, col);
+    }
+    // Left
+    int leftIndex = row * game.height + col - 1;
+    if (col > 0 && game.cells[leftIndex].adjacentMines == 0 && game.cells[leftIndex].status == HIDDEN)
+    {
+        ClearIslandFromIndex(game, row, col - 1);
+    }
+    // Right
+    int rightIndex = row * game.height + col + 1;
+    if (col < game.width - 1 && game.cells[rightIndex].adjacentMines == 0 && game.cells[rightIndex].status == HIDDEN)
+    {
+        ClearIslandFromIndex(game, row, col + 1);
+    }
 }
 
 void ResetGame(Game game)
