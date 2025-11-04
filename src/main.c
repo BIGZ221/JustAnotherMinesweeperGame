@@ -14,7 +14,7 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 #include "constant.h"
 #include "renderer.h"
 
-void ProcessEvents(Event *events);
+void ProcessEvents(Game game, Event *events);
 
 int main()
 {
@@ -47,7 +47,7 @@ int main()
 
 		Event *events = RenderGame(game);
 
-		ProcessEvents(events);
+		ProcessEvents(game, events);
 
 		// end the frame and get ready for the next one  (display frame, poll input, etc...)
 		EndDrawing();
@@ -63,13 +63,28 @@ int main()
 	return 0;
 }
 
-void ProcessEvents(Event *events)
+void ProcessEvents(Game game, Event *events)
 {
 	Event *start = events;
 	while (start != NULL)
 	{
 		Event *event = start;
 		printf("Got event %d\n", event->type);
+		switch (event->type)
+		{
+		case CLICK_CELL:
+			event->data->cell->status = SHOWING;
+			if (event->data->cell->isMine) game.isLost = true;
+			break;
+		case FLAG_CELL:
+			event ->data->cell->status = FLAGGED;
+			break;
+		case RESET:
+			ResetGame(game);
+			break;
+		default:
+			break;
+		}
 		start = event->next;
 		FreeEvent(event);
 	}

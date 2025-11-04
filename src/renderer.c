@@ -53,23 +53,29 @@ Event *RenderBoard(Game game)
     {
         for (size_t j = 0; j < game.width; j++)
         {
-            Cell cell = game.cells[i * game.height + j];
+            Cell *cell = &game.cells[i * game.height + j];
             int topLeftX = xOffset + j * cellDimension;
             int topLeftY = HEADER_HEIGHT + i * cellDimension;
             Rectangle cellRect = (Rectangle){topLeftX, topLeftY, cellDimension, cellDimension};
             DrawRectangleLinesEx(cellRect, 1.0, BLACK);
 
-            if (cell.isHidden)
+            if (cell->status == HIDDEN)
             {
                 DrawLine(cellRect.x + cellDimension / 4, cellRect.y + cellDimension / 2, cellRect.x + 3 * cellDimension / 4, cellRect.y + cellDimension / 2, BLACK);
             }
-            else if (cell.isMine)
+            else if (cell->status == FLAGGED) {
+                const char *cellText = "?";
+                int fontSize = cellDimension - 4;
+                int textWidth = MeasureText(cellText, fontSize);
+                DrawText(cellText, topLeftX + cellDimension / 2 - textWidth / 2, topLeftY + cellDimension / 2 - fontSize / 2, fontSize, BLACK);
+            }
+            else if (cell->isMine)
             {
                 DrawCircle(topLeftX + cellDimension / 2, topLeftY + cellDimension / 2, cellDimension / 2, BLACK);
             }
             else
             {
-                const char *cellText = TextFormat("%d", cell.adjacentMines);
+                const char *cellText = TextFormat("%d", cell->adjacentMines);
                 int fontSize = cellDimension - 4;
                 int textWidth = MeasureText(cellText, fontSize);
                 DrawText(cellText, topLeftX + cellDimension / 2 - textWidth / 2, topLeftY + cellDimension / 2 - fontSize / 2, fontSize, BLACK);
@@ -78,21 +84,13 @@ Event *RenderBoard(Game game)
             {
                 if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
                 {
-                    Event *newEvent = (Event *)malloc(sizeof(Event));
-                    newEvent->type = CLICK_CELL;
-                    EventData *eventData = (EventData *)malloc(sizeof(EventData));
-                    eventData->cell = cell;
-                    newEvent->data = eventData;
-                    event = newEvent;
+                    EventData *eventData = NewCellEventData(cell);
+                    event = NewEvent(CLICK_CELL, eventData, NULL);
                 }
                 else if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
                 {
-                    Event *newEvent = (Event *)malloc(sizeof(Event));
-                    newEvent->type = FLAG_CELL;
-                    EventData *eventData = (EventData *)malloc(sizeof(EventData));
-                    eventData->cell = cell;
-                    newEvent->data = eventData;
-                    event = newEvent;
+                    EventData *eventData = NewCellEventData(cell);
+                    event = NewEvent(FLAG_CELL, eventData, NULL);
                 }
             }
         }
@@ -111,11 +109,7 @@ Event *RenderButton(Button button)
     DrawText(button.text, button.position.x + BUTTON_PADDING_X, button.position.y + BUTTON_PADDING_Y, FONT_SIZE, BLACK);
     if (isHovered && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
     {
-        Event *event = (Event *)malloc(sizeof(Event));
-        event->type = RESET;
-        event->data = NULL;
-        event->next = NULL;
-        return event;
+        return NewEvent(RESET, NULL, NULL);
     }
     return NULL;
 }
@@ -134,11 +128,31 @@ Event *ConcatEvents(Event *parentEvent, Event *childEvent)
     return parentEvent;
 }
 
+EventData *NewCellEventData(Cell *cell) {
+    EventData *data = (EventData *)malloc(sizeof(EventData));
+    data->cell = cell;
+    return data;
+}
+
+void FreeCellEventData(EventData *data) {
+    free(data);
+}
+
+Event *NewEvent(EventType type, EventData *data, Event *next) {
+    Event *event = (Event*)malloc(sizeof(Event));
+    event->type = type;
+    event->data = data;
+    event->next = next;
+    return event;
+}
+
+
 void FreeEvent(Event *event)
 {
-    if (event->data != NULL)
+    event->next = NULL;
+    if (event->type == CLICK_CELL || event->type == FLAG_CELL || event->data != NULL)
     {
-        free(event->data);
+        FreeCellEventData(event->data);
     }
     free(event);
 }

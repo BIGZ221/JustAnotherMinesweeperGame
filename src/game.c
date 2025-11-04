@@ -8,9 +8,10 @@ Game NewGame(int width, int height, int mines)
         width,
         height,
         mines,
+        false,
         cells,
     };
-    ResetMines(game);
+    ResetGame(game);
     return game;
 }
 
@@ -19,13 +20,14 @@ void FreeGame(Game game)
     free(game.cells);
 }
 
-void ResetMines(Game game)
+void ResetGame(Game game)
 {
+    game.isLost = false;
     int minesRemaining = game.mines;
     for (size_t i = 0; i < game.width * game.height; i++) {
         Cell *cell = &game.cells[i];
         cell->isMine = false;
-        cell->isHidden = true;
+        cell->status = HIDDEN;
     }
     int *minePositions = LoadRandomSequence(game.mines, 0, game.width * game.height -1);
     for (size_t i = 0; i < game.mines; i++)

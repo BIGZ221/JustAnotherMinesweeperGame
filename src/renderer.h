@@ -13,7 +13,7 @@ typedef enum EventType
 
 typedef union EventData
 {
-    Cell cell;
+    Cell *cell;
 } EventData;
 
 typedef struct Event
@@ -24,6 +24,11 @@ typedef struct Event
 } Event;
 
 Event *RenderGame(Game game);
+
+EventData *NewCellEventData(Cell *cell);
+void FreeCellEventData(EventData *event);
+
+Event *NewEvent(EventType type, EventData *data, Event *next);
 void FreeEvent(Event *event);
 
 #endif
