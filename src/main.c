@@ -14,7 +14,7 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 #include "constant.h"
 #include "renderer.h"
 
-void ProcessEvents(Game game, Event *events);
+void ProcessEvents(Game *game, Event *events);
 
 int main()
 {
@@ -31,10 +31,10 @@ int main()
 	Texture wabbit = LoadTexture("wabbit_alpha.png");
 
 	int boardSize = 25;
-	int mineCount = 5;
+	int mineCount = 50;
 	Game game = NewGame(boardSize, boardSize, mineCount);
 
-	PrintGame(game);
+	PrintGame(&game);
 
 	// game loop
 	while (!WindowShouldClose()) // run the loop untill the user presses ESCAPE or presses the Close button on the window
@@ -47,7 +47,7 @@ int main()
 
 		Event *events = RenderGame(game);
 
-		ProcessEvents(game, events);
+		ProcessEvents(&game, events);
 
 		// end the frame and get ready for the next one  (display frame, poll input, etc...)
 		EndDrawing();
@@ -56,14 +56,14 @@ int main()
 	// cleanup
 	// unload our texture so it can be cleaned up
 	UnloadTexture(wabbit);
-	FreeGame(game);
+	FreeGame(&game);
 
 	// destroy the window and cleanup the OpenGL context
 	CloseWindow();
 	return 0;
 }
 
-void ProcessEvents(Game game, Event *events)
+void ProcessEvents(Game *game, Event *events)
 {
 	Event *start = events;
 	while (start != NULL)
@@ -73,12 +73,17 @@ void ProcessEvents(Game game, Event *events)
 		switch (event->type)
 		{
 		case CLICK_CELL:
+			if (game->isLost)
+				break;
 			event->data->cell->status = SHOWING;
-			if (event->data->cell->isMine) game.isLost = true;
+			if (event->data->cell->isMine)
+				game->isLost = true;
 			ClearIsland(game, event->data->cell);
 			break;
 		case FLAG_CELL:
-			event ->data->cell->status = FLAGGED;
+			if (game->isLost || event->data->cell->status == SHOWING)
+				break;
+			event->data->cell->status = FLAGGED;
 			break;
 		case RESET:
 			ResetGame(game);

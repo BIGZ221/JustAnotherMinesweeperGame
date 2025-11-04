@@ -30,11 +30,11 @@ typedef struct Game
 } Game;
 
 Game NewGame(int width, int height, int mines);
-void FreeGame(Game game);
+void FreeGame(Game *game);
 
-void ResetGame(Game game);
-void ClearIsland(Game game, Cell *startingCell);
+void ResetGame(Game *game);
+void ClearIsland(Game *game, Cell *startingCell);
 
-void PrintGame(Game game);
+void PrintGame(Game *game);
 
 #endif

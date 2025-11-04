@@ -1,7 +1,10 @@
+#include <stdbool.h>
+
 #include "raylib.h"
 #include "game.h"
 
-void ClearIslandFromIndex(Game game, int row, int col);
+void ClearIslandFromIndex(Game *game, int row, int col);
+bool ShouldClearCell(Cell *cell);
 
 Game NewGame(int width, int height, int mines)
 {
@@ -13,70 +16,77 @@ Game NewGame(int width, int height, int mines)
         false,
         cells,
     };
-    ResetGame(game);
+    ResetGame(&game);
     return game;
 }
 
-void FreeGame(Game game)
+void FreeGame(Game *game)
 {
-    free(game.cells);
+    free(game->cells);
 }
 
-void ClearIsland(Game game, Cell *startingCell) {
+void ClearIsland(Game *game, Cell *startingCell)
+{
     int startIndex;
-    for (size_t i = 0; i < game.width * game.height; i++)
+    for (size_t i = 0; i < game->width * game->height; i++)
     {
-        if (startingCell == &game.cells[i]) startIndex = i;
+        if (startingCell == &game->cells[i])
+            startIndex = i;
     }
-    int startRow = startIndex / 10;
-    int startCol = startIndex % 10;
+    int startRow = startIndex / game->height;
+    int startCol = startIndex % game->width;
     ClearIslandFromIndex(game, startRow, startCol);
 }
 
-void ClearIslandFromIndex(Game game, int row, int col)
+void ClearIslandFromIndex(Game *game, int row, int col)
 {
-    Cell *cell = &game.cells[row * game.height + col];
+    Cell *cell = &game->cells[row * game->height + col];
     cell->status = SHOWING;
     // Above
-    int aboveIndex = (row - 1) * game.height + col;
-    if (row > 0 && game.cells[aboveIndex].adjacentMines == 0 && game.cells[aboveIndex].status == HIDDEN)
+    int aboveIndex = (row - 1) * game->height + col;
+    if (row > 0 && ShouldClearCell(&game->cells[aboveIndex]))
     {
         ClearIslandFromIndex(game, row - 1, col);
-
     }
     // Below
-    int belowIndex = (row + 1) * game.height + col;
-    if (row < game.height - 1 && game.cells[belowIndex].adjacentMines == 0 && game.cells[belowIndex].status == HIDDEN)
+    int belowIndex = (row + 1) * game->height + col;
+    if (row < game->height - 1 && ShouldClearCell(&game->cells[belowIndex]))
     {
         ClearIslandFromIndex(game, row + 1, col);
     }
     // Left
-    int leftIndex = row * game.height + col - 1;
-    if (col > 0 && game.cells[leftIndex].adjacentMines == 0 && game.cells[leftIndex].status == HIDDEN)
+    int leftIndex = row * game->height + col - 1;
+    if (col > 0 && ShouldClearCell(&game->cells[leftIndex]))
     {
         ClearIslandFromIndex(game, row, col - 1);
     }
     // Right
-    int rightIndex = row * game.height + col + 1;
-    if (col < game.width - 1 && game.cells[rightIndex].adjacentMines == 0 && game.cells[rightIndex].status == HIDDEN)
+    int rightIndex = row * game->height + col + 1;
+    if (col < game->width - 1 && ShouldClearCell(&game->cells[rightIndex]))
     {
         ClearIslandFromIndex(game, row, col + 1);
     }
 }
 
-void ResetGame(Game game)
+bool ShouldClearCell(Cell *cell)
 {
-    game.isLost = false;
-    int minesRemaining = game.mines;
-    for (size_t i = 0; i < game.width * game.height; i++) {
-        Cell *cell = &game.cells[i];
+    return cell->adjacentMines == 0 && cell->status == HIDDEN && !cell->isMine;
+}
+
+void ResetGame(Game *game)
+{
+    game->isLost = false;
+    int minesRemaining = game->mines;
+    for (size_t i = 0; i < game->width * game->height; i++)
+    {
+        Cell *cell = &game->cells[i];
         cell->isMine = false;
         cell->status = HIDDEN;
     }
-    int *minePositions = LoadRandomSequence(game.mines, 0, game.width * game.height -1);
-    for (size_t i = 0; i < game.mines; i++)
+    int *minePositions = LoadRandomSequence(game->mines, 0, game->width * game->height - 1);
+    for (size_t i = 0; i < game->mines; i++)
     {
-        Cell *cell = &game.cells[minePositions[i]];
+        Cell *cell = &game->cells[minePositions[i]];
         if (!cell->isMine)
         {
             cell->isMine = true;
@@ -84,49 +94,49 @@ void ResetGame(Game game)
         }
     }
     UnloadRandomSequence(minePositions);
-    for (size_t i = 0; i < game.height; i++)
+    for (size_t i = 0; i < game->height; i++)
     {
-        for (size_t j = 0; j < game.width; j++)
+        for (size_t j = 0; j < game->width; j++)
         {
-            Cell *cell = &game.cells[i * game.height + j];
+            Cell *cell = &game->cells[i * game->height + j];
             cell->adjacentMines = 0;
             // Above
-            if (i > 0 && game.cells[(i - 1) * game.height + j].isMine)
+            if (i > 0 && game->cells[(i - 1) * game->height + j].isMine)
             {
                 cell->adjacentMines++;
             }
             // Below
-            if (i < game.height - 1 && game.cells[(i + 1) * game.height + j].isMine)
+            if (i < game->height - 1 && game->cells[(i + 1) * game->height + j].isMine)
             {
                 cell->adjacentMines++;
             }
             // Left
-            if (j > 0 && game.cells[i * game.height + j - 1].isMine)
+            if (j > 0 && game->cells[i * game->height + j - 1].isMine)
             {
                 cell->adjacentMines++;
             }
             // Right
-            if (j < game.width - 1 && game.cells[i * game.height + j + 1].isMine)
+            if (j < game->width - 1 && game->cells[i * game->height + j + 1].isMine)
             {
                 cell->adjacentMines++;
             }
             // Top left
-            if (i > 0 && j > 0 && game.cells[(i - 1) * game.height + j - 1].isMine)
+            if (i > 0 && j > 0 && game->cells[(i - 1) * game->height + j - 1].isMine)
             {
                 cell->adjacentMines++;
             }
             // Top right
-            if (i > 0 && j < game.width - 1 && game.cells[(i - 1) * game.height + j + 1].isMine)
+            if (i > 0 && j < game->width - 1 && game->cells[(i - 1) * game->height + j + 1].isMine)
             {
                 cell->adjacentMines++;
             }
             // Bottom left
-            if (i < game.height - 1 && j > 0 && game.cells[(i + 1) * game.height + j - 1].isMine)
+            if (i < game->height - 1 && j > 0 && game->cells[(i + 1) * game->height + j - 1].isMine)
             {
                 cell->adjacentMines++;
             }
             // Bottom right
-            if (i < game.height - 1 && j < game.width - 1 && game.cells[(i + 1) * game.height + j + 1].isMine)
+            if (i < game->height - 1 && j < game->width - 1 && game->cells[(i + 1) * game->height + j + 1].isMine)
             {
                 cell->adjacentMines++;
             }
@@ -134,18 +144,21 @@ void ResetGame(Game game)
     }
 }
 
-void PrintGame(Game game)
+void PrintGame(Game *game)
 {
-    int width = game.width;
-    printf("|%dX%d %d|\n", game.width, game.width, game.mines);
-    for (size_t i = 0; i < game.height; i++)
+    int width = game->width;
+    printf("|%dX%d %d|\n", game->width, game->width, game->mines);
+    for (size_t i = 0; i < game->height; i++)
     {
-        for (size_t j = 0; j < game.width; j++)
+        for (size_t j = 0; j < game->width; j++)
         {
-            Cell cell = game.cells[i * game.height + j];
-            if (cell.isMine) {
+            Cell cell = game->cells[i * game->height + j];
+            if (cell.isMine)
+            {
                 printf("X");
-            } else {
+            }
+            else
+            {
                 printf("%d", cell.adjacentMines);
             }
         }

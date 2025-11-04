@@ -22,6 +22,7 @@ Event *RenderHeader(Game game);
 Event *RenderBoard(Game game);
 Event *RenderButton(Button button);
 Event *ConcatEvents(Event *parentEvent, Event *childEvent);
+int MeasureButton(Button button);
 
 Event *RenderGame(Game game)
 {
@@ -34,9 +35,15 @@ Event *RenderHeader(Game game)
 {
     DrawRectangle(0, 0, WINDOW_WIDTH, HEADER_HEIGHT, DARKGRAY);
     DrawRectangleLinesEx((Rectangle){0, 0, WINDOW_WIDTH, HEADER_HEIGHT}, 4.0, BLACK);
-    Event *buttonEvent = RenderButton((Button){
-        (Vector2){10, 10}, "Reset"});
+    Button resetButton = (Button){
+        (Vector2){10, 10}, "Reset"};
+    Event *buttonEvent = RenderButton(resetButton);
     DrawText(TextFormat("Mines %d", game.mines), 10, BUTTON_HEIGHT + 16, FONT_SIZE, BLACK);
+    if (game.isLost)
+    {
+        int resetButtonWidth = MeasureButton(resetButton);
+        DrawText(TextFormat("You lost!"), 20 + resetButtonWidth, 12, 20, BLACK);
+    }
     return buttonEvent;
 }
 
@@ -63,7 +70,8 @@ Event *RenderBoard(Game game)
             {
                 DrawLine(cellRect.x + cellDimension / 4, cellRect.y + cellDimension / 2, cellRect.x + 3 * cellDimension / 4, cellRect.y + cellDimension / 2, BLACK);
             }
-            else if (cell->status == FLAGGED) {
+            else if (cell->status == FLAGGED)
+            {
                 const char *cellText = "?";
                 int fontSize = cellDimension - 4;
                 int textWidth = MeasureText(cellText, fontSize);
@@ -114,6 +122,12 @@ Event *RenderButton(Button button)
     return NULL;
 }
 
+int MeasureButton(Button button)
+{
+    int buttonWidth = MeasureText(button.text, FONT_SIZE);
+    return buttonWidth + 2 * BUTTON_PADDING_X;
+}
+
 Event *ConcatEvents(Event *parentEvent, Event *childEvent)
 {
     if (parentEvent == NULL)
@@ -128,24 +142,26 @@ Event *ConcatEvents(Event *parentEvent, Event *childEvent)
     return parentEvent;
 }
 
-EventData *NewCellEventData(Cell *cell) {
+EventData *NewCellEventData(Cell *cell)
+{
     EventData *data = (EventData *)malloc(sizeof(EventData));
     data->cell = cell;
     return data;
 }
 
-void FreeCellEventData(EventData *data) {
+void FreeCellEventData(EventData *data)
+{
     free(data);
 }
 
-Event *NewEvent(EventType type, EventData *data, Event *next) {
-    Event *event = (Event*)malloc(sizeof(Event));
+Event *NewEvent(EventType type, EventData *data, Event *next)
+{
+    Event *event = (Event *)malloc(sizeof(Event));
     event->type = type;
     event->data = data;
     event->next = next;
     return event;
 }
-
 
 void FreeEvent(Event *event)
 {
