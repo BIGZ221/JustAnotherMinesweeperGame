@@ -6,6 +6,13 @@
 #include <malloc.h>
 #include "raylib.h"
 
+typedef enum GameStatus
+{
+    ONGOING = 0,
+    LOST = 1,
+    WON = 2,
+} GameStatus;
+
 typedef enum CellStatus
 {
     HIDDEN = 0,
@@ -25,7 +32,8 @@ typedef struct Game
     int width;
     int height;
     int mines;
-    bool isLost;
+    int clearedCells;
+    GameStatus status;
     Cell *cells;
 } Game;
 

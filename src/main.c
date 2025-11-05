@@ -31,7 +31,7 @@ int main()
 	Texture wabbit = LoadTexture("wabbit_alpha.png");
 
 	int boardSize = 25;
-	int mineCount = 50;
+	int mineCount = 100;
 	Game game = NewGame(boardSize, boardSize, mineCount);
 
 	PrintGame(&game);
@@ -73,17 +73,33 @@ void ProcessEvents(Game *game, Event *events)
 		switch (event->type)
 		{
 		case CLICK_CELL:
-			if (game->isLost)
+			if (game->status != ONGOING || event->data->cell->status == FLAGGED)
 				break;
 			event->data->cell->status = SHOWING;
-			if (event->data->cell->isMine)
-				game->isLost = true;
 			ClearIsland(game, event->data->cell);
+			if (event->data->cell->isMine)
+			{
+				game->status = LOST;
+				for (size_t i = 0; i < game->width * game->height; i++)
+				{
+					if (game->cells[i].isMine)
+						game->cells[i].status = SHOWING;
+				}
+			}
+			if (game->clearedCells + game->mines == game->width * game->height)
+				game->status = WON;
 			break;
 		case FLAG_CELL:
-			if (game->isLost || event->data->cell->status == SHOWING)
+			if (game->status != ONGOING || event->data->cell->status == SHOWING)
 				break;
-			event->data->cell->status = FLAGGED;
+			if (event->data->cell->status == FLAGGED)
+			{
+				event->data->cell->status = HIDDEN;
+			}
+			else
+			{
+				event->data->cell->status = FLAGGED;
+			}
 			break;
 		case RESET:
 			ResetGame(game);

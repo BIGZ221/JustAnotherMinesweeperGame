@@ -3,7 +3,7 @@
 #include "raylib.h"
 #include "game.h"
 
-void ClearIslandFromIndex(Game *game, int row, int col);
+int ClearIslandFromIndex(Game *game, int row, int col);
 bool ShouldClearCell(Cell *cell);
 
 Game NewGame(int width, int height, int mines)
@@ -13,7 +13,8 @@ Game NewGame(int width, int height, int mines)
         width,
         height,
         mines,
-        false,
+        0,
+        ONGOING,
         cells,
     };
     ResetGame(&game);
@@ -36,39 +37,42 @@ void ClearIsland(Game *game, Cell *startingCell)
     int startRow = startIndex / game->height;
     int startCol = startIndex % game->width;
     Cell cell = game->cells[startIndex];
-    ClearIslandFromIndex(game, startRow, startCol);
+    int clearedCells = ClearIslandFromIndex(game, startRow, startCol);
+    game->clearedCells = game->clearedCells + clearedCells;
 }
 
-void ClearIslandFromIndex(Game *game, int row, int col)
+int ClearIslandFromIndex(Game *game, int row, int col)
 {
     Cell *cell = &game->cells[row * game->height + col];
     cell->status = SHOWING;
+    int clearedCells = 1;
     if (cell->adjacentMines != 0)
-        return;
+        return clearedCells;
     // Above
     int aboveIndex = (row - 1) * game->height + col;
     if (row > 0 && ShouldClearCell(&game->cells[aboveIndex]))
     {
-        ClearIslandFromIndex(game, row - 1, col);
+        clearedCells = clearedCells + ClearIslandFromIndex(game, row - 1, col);
     }
     // Below
     int belowIndex = (row + 1) * game->height + col;
     if (row < game->height - 1 && ShouldClearCell(&game->cells[belowIndex]))
     {
-        ClearIslandFromIndex(game, row + 1, col);
+        clearedCells = clearedCells + ClearIslandFromIndex(game, row + 1, col);
     }
     // Left
     int leftIndex = row * game->height + col - 1;
     if (col > 0 && ShouldClearCell(&game->cells[leftIndex]))
     {
-        ClearIslandFromIndex(game, row, col - 1);
+        clearedCells = clearedCells + ClearIslandFromIndex(game, row, col - 1);
     }
     // Right
     int rightIndex = row * game->height + col + 1;
     if (col < game->width - 1 && ShouldClearCell(&game->cells[rightIndex]))
     {
-        ClearIslandFromIndex(game, row, col + 1);
+        clearedCells = clearedCells + ClearIslandFromIndex(game, row, col + 1);
     }
+    return clearedCells;
 }
 
 bool ShouldClearCell(Cell *cell)
@@ -78,7 +82,8 @@ bool ShouldClearCell(Cell *cell)
 
 void ResetGame(Game *game)
 {
-    game->isLost = false;
+    game->status = ONGOING;
+    game->clearedCells = 0;
     int minesRemaining = game->mines;
     for (size_t i = 0; i < game->width * game->height; i++)
     {

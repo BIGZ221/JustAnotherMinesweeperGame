@@ -39,10 +39,11 @@ Event *RenderHeader(Game game)
         (Vector2){10, 10}, "Reset"};
     Event *buttonEvent = RenderButton(resetButton);
     DrawText(TextFormat("Mines %d", game.mines), 10, BUTTON_HEIGHT + 16, FONT_SIZE, BLACK);
-    if (game.isLost)
+    if (game.status != ONGOING)
     {
         int resetButtonWidth = MeasureButton(resetButton);
-        DrawText(TextFormat("You lost!"), 20 + resetButtonWidth, 12, 20, BLACK);
+        const char *text = game.status == LOST ? "You lost!" : "You won!";
+        DrawText(TextFormat(text), 20 + resetButtonWidth, 12, 20, BLACK);
     }
     return buttonEvent;
 }
