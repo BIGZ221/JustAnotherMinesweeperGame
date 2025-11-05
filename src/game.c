@@ -3,7 +3,7 @@
 #include "raylib.h"
 #include "game.h"
 
-void ClearIslandFromIndex(Game *game, int row, int col, bool wasPreviousHiddenWithNoAdjacent);
+void ClearIslandFromIndex(Game *game, int row, int col);
 bool ShouldClearCell(Cell *cell);
 
 Game NewGame(int width, int height, int mines)
@@ -36,39 +36,38 @@ void ClearIsland(Game *game, Cell *startingCell)
     int startRow = startIndex / game->height;
     int startCol = startIndex % game->width;
     Cell cell = game->cells[startIndex];
-    ClearIslandFromIndex(game, startRow, startCol, false);
+    ClearIslandFromIndex(game, startRow, startCol);
 }
 
-void ClearIslandFromIndex(Game *game, int row, int col, bool didPreviousHaveAdjacent)
+void ClearIslandFromIndex(Game *game, int row, int col)
 {
     Cell *cell = &game->cells[row * game->height + col];
-    bool hasAdjacent = cell->adjacentMines != 0;
     cell->status = SHOWING;
-    if (didPreviousHaveAdjacent && cell->adjacentMines != 0)
+    if (cell->adjacentMines != 0)
         return;
     // Above
     int aboveIndex = (row - 1) * game->height + col;
     if (row > 0 && ShouldClearCell(&game->cells[aboveIndex]))
     {
-        ClearIslandFromIndex(game, row - 1, col, hasAdjacent);
+        ClearIslandFromIndex(game, row - 1, col);
     }
     // Below
     int belowIndex = (row + 1) * game->height + col;
     if (row < game->height - 1 && ShouldClearCell(&game->cells[belowIndex]))
     {
-        ClearIslandFromIndex(game, row + 1, col, hasAdjacent);
+        ClearIslandFromIndex(game, row + 1, col);
     }
     // Left
     int leftIndex = row * game->height + col - 1;
     if (col > 0 && ShouldClearCell(&game->cells[leftIndex]))
     {
-        ClearIslandFromIndex(game, row, col - 1, hasAdjacent);
+        ClearIslandFromIndex(game, row, col - 1);
     }
     // Right
     int rightIndex = row * game->height + col + 1;
     if (col < game->width - 1 && ShouldClearCell(&game->cells[rightIndex]))
     {
-        ClearIslandFromIndex(game, row, col + 1, hasAdjacent);
+        ClearIslandFromIndex(game, row, col + 1);
     }
 }
 
